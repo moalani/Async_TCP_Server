@@ -7,44 +7,57 @@ namespace nbs
 
 	namespace util
 	{
-		// vector to keep track of new connections
-		static std::vector<boost::asio::ip::tcp::socket> clients{};
-		// mutex will be used to lock the vector when adding new connections.
-		std::mutex mu;
-		Socket_server::Socket_server(unsigned int port, std::shared_ptr<Socket_server_delegate_handler>& delegate) :
-			server_io_context(delegate->_io_context), _acceptor(delegate->_io_context, delegate->_endpoint)
-		{
-			mu.lock();
-			clients.emplace_back(std::move(delegate->_socket));
-			mu.unlock();
-			std::cout << "Num of connected clients = " << connection_count() << std::endl;
+		Socket_server::Socket_server(unsigned int port, std::shared_ptr<Test_delegate> delegate) :
+			_io_context(),
+			_thread(boost::bind(&boost::asio::io_context::run, &_io_context)),
+			_socket(_io_context),
+			_acceptor(_io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)) {
 
+		
+			std::cout << "Server is online..." << std::endl;
+
+			boost::asio::ip::tcp::resolver resolver(_io_context);
+			boost::asio::ip::tcp::resolver::query query("127.0.0.1", std::to_string(port));
+			boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
+			async_accept();
 		}
-		// ths function is responsible for handling new connections
-		void Socket_server::async_accept(std::shared_ptr<Socket_server_delegate_handler>& delegate)
-		{
 
-			socket.emplace(server_io_context);
-			std::cout << "Accepting new connections ..." << std::endl;
-			_acceptor.async_accept(*socket, [&](boost::system::error_code error) {
-				std::make_shared<Socket_server_delegate_handler>(std::move(*socket), delegate->_io_context, delegate->_port)->start();
-				async_accept(delegate);
+		void Socket_server::async_accept()
+		{
+			Connection* connection = new Connection(_io_context);
+			_acceptor.async_accept(connection->socket(), [this, connection](boost::system::error_code ec)
+				{
+					if (!ec) {
+					
+						std::lock_guard<std::mutex> guard(mu);
+						//connections.emplace_back(new boost::asio::ip::tcp::socket(_io_context)); => this works but message is not sent.
+						connections.push_back(std::move(connection->socket()));	
+						std::cout << "Connection Successful!" << std::endl;
+						std::cout << "Current number of connections = " << connection_count() << std::endl;
+						connection->start();
+					}
+					else {
+					
+						delete connection;
+					}
+
+					async_accept();
 				});
 		}
-		void Socket_server::send(boost::asio::ip::tcp::socket& socket, const std::vector<std::uint8_t>& data) {
-			boost::asio::write(socket, boost::asio::buffer(data));
+
+		void Socket_server::send(boost::asio::ip::tcp::socket& sock, const std::vector<std::uint8_t>& data) {
+			boost::asio::write(sock, boost::asio::buffer(data));
 		}
+
 		unsigned int Socket_server::connection_count() {
-			return static_cast<unsigned int>(clients.size());
+			return static_cast<unsigned int>(connections.size());
 		}
-		// send data to all clients connected
-		// TODO: find a way to test this function in "real-time"
+
 		void Socket_server::broadcast(const std::vector<std::uint8_t>& data) {
 			for (int i = 0; i < connection_count(); i++) {
-				send(clients[i], data);
+				send(connections[i], data);
 			}
 
 		}
-
 	}
 }
