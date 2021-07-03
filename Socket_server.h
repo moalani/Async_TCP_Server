@@ -17,10 +17,11 @@ namespace nbs
 
 	namespace util
 	{
-		class Connection : public boost::enable_shared_from_this<Connection>
+		class Connection
 		{
 		public:
 			Connection(boost::asio::io_context& io_context) : connection_socket(io_context) {
+				
 			}
 
 			void start() {
@@ -34,12 +35,13 @@ namespace nbs
 			}
 
 			~Connection() {
-				assert(subscriptions.size() == 0);
+				//assert(subscriptions.size() == 0);
 			};
-			static std::shared_ptr<Connection> create(boost::asio::io_context& io_context) {
+			static boost::shared_ptr<Connection> create(boost::asio::io_context& io_context) {
 
-				return std::shared_ptr<Connection>(new Connection(io_context));
+				return boost::shared_ptr<Connection>(new Connection(io_context));
 			}
+
 		private:
 			void read() {
 			
@@ -61,9 +63,11 @@ namespace nbs
 		};
 
 		/// \brief Handles a simple TCP server
-		class Socket_server : public boost::enable_shared_from_this<Socket_server>
+		class Socket_server
 		{
 		public:
+			void handle_accept(boost::shared_ptr<Connection> connection, const boost::system::error_code &err);
+			void start_accept();
 			void async_accept();
 			/// \brief Creates an asynchonous TCP server
 			///
@@ -104,7 +108,7 @@ namespace nbs
 			
 		private:
 			boost::asio::io_context _io_context;
-			boost::thread _thread;
+			std::thread _thread;
 			boost::asio::ip::tcp::socket _socket;
 			boost::asio::ip::tcp::acceptor _acceptor;
 			//std::vector<boost::shared_ptr<boost::asio::ip::tcp::socket> > connections;
