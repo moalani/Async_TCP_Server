@@ -18,3 +18,4 @@ If everything runs ok, go ahead and start testing the application by connecting 
 2. Open a new terminal window and connect `telnet localhost 1080`
 3. Open a second terminal window and connect `telnet localhost 1080`
 4. From the server, send a message. If the broadcast function was used, the message should be seen on both clients like this:
+![Screenshot from 2021-07-04 17-22-05](https://user-images.githubusercontent.com/49099141/124403669-6633de80-dcec-11eb-834f-4a9105f2eddd.png)
