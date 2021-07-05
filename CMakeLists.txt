@@ -4,7 +4,7 @@ project(Async_TCP_Server VERSION 1.0.0 LANGUAGES CXX)
 find_package(Boost COMPONENTS thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

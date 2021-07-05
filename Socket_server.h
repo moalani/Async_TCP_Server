@@ -9,8 +9,6 @@
 #include "boost/asio.hpp"
 #include "boost/thread/thread.hpp"
 #include "Socket_server_delegate.h"
-#include "boost/enable_shared_from_this.hpp"
-
 
 namespace nbs
 {
@@ -35,13 +33,15 @@ namespace nbs
 			}
 
 			~Connection() {
-				//assert(subscriptions.size() == 0);
+				connection_socket.close();
+				std::cout << "Destroyed Connection\n";
 			};
 			static boost::shared_ptr<Connection> create(boost::asio::io_context& io_context) {
-
+				std::cout << "Created new connection\n";
 				return boost::shared_ptr<Connection>(new Connection(io_context));
 			}
-
+		
+		//Socket_server server;
 		private:
 			void read() {
 			
@@ -53,13 +53,11 @@ namespace nbs
 							std::cout << message << std::endl;
 						}
 					});
-			}
-
-
+			}		
 			boost::asio::ip::tcp::socket connection_socket;
-			
 			enum { max_length = 1024 };
 			char message[max_length];
+			
 		};
 
 		/// \brief Handles a simple TCP server
@@ -67,7 +65,7 @@ namespace nbs
 		{
 		public:
 			void handle_accept(boost::shared_ptr<Connection> connection, const boost::system::error_code &err);
-			void start_accept();
+			//void start_accept();
 			void async_accept();
 			/// \brief Creates an asynchonous TCP server
 			///
@@ -88,17 +86,20 @@ namespace nbs
 			///
 			/// \param data The data
 			void broadcast(const std::vector<std::uint8_t>& data);
+			void run_io_contex();
 			void send(boost::asio::ip::tcp::socket& sock, const std::vector<std::uint8_t>& data);
 			/// \brief Closes all connections and shuts down the server
 			void do_close()
 			{
-				_socket.close();
+				//_socket.close();
 			}
 			void close()
 			{
 				_io_context.post(boost::bind(&Socket_server::do_close, this));
 			}
 			~Socket_server() {
+				std::cout << "Server closing...\n";
+				_io_context.stop();
 				close();
 				if (_thread.joinable())
 					_thread.join();
@@ -109,10 +110,8 @@ namespace nbs
 		private:
 			boost::asio::io_context _io_context;
 			std::thread _thread;
-			boost::asio::ip::tcp::socket _socket;
 			boost::asio::ip::tcp::acceptor _acceptor;
-			//std::vector<boost::shared_ptr<boost::asio::ip::tcp::socket> > connections;
-			std::vector<boost::asio::ip::tcp::socket > connections;
+			std::vector<boost::shared_ptr<Connection> > connections;
 			
 			mutable std::mutex mu;
 		};
