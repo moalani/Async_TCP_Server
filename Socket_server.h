@@ -61,7 +61,7 @@ namespace nbs
 		};
 
 		/// \brief Handles a simple TCP server
-		class Socket_server
+		class Socket_server : public boost::enable_shared_from_this<Socket_server>
 		{
 		public:
 			void handle_accept(boost::shared_ptr<Connection> connection, const boost::system::error_code &err);
@@ -88,6 +88,8 @@ namespace nbs
 			void broadcast(const std::vector<std::uint8_t>& data);
 			void run_io_contex();
 			void send(boost::asio::ip::tcp::socket& sock, const std::vector<std::uint8_t>& data);
+			void handle_write(const boost::system::error_code & /*error*/,
+							  size_t /*bytes_transferred*/);
 			/// \brief Closes all connections and shuts down the server
 			void do_close()
 			{
@@ -112,8 +114,8 @@ namespace nbs
 			std::thread _thread;
 			boost::asio::ip::tcp::acceptor _acceptor;
 			std::vector<boost::shared_ptr<Connection> > connections;
-			
-			mutable std::mutex mu;
+			mutable std::mutex _write_mutex;
+			mutable std::mutex _read_mutex;
 		};
 
 

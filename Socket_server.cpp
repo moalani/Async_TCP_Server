@@ -37,7 +37,7 @@ namespace nbs
 				{
 					if (!ec) {
 					
-						std::lock_guard<std::mutex> guard(mu);
+						std::lock_guard<std::mutex> lock(_read_mutex);
 						connections.push_back(connection);
 						std::cout << "Connection Successful !" << std::endl;
 						std::cout << "Current number of connections = " << connection_count() << std::endl;
@@ -59,18 +59,29 @@ namespace nbs
 			}
 		}
 		void Socket_server::send(boost::asio::ip::tcp::socket& sock, const std::vector<std::uint8_t>& data) {
-			boost::asio::write(sock, boost::asio::buffer(data));
+
+			boost::asio::async_write(sock, boost::asio::buffer(data),
+									 boost::bind(&Socket_server::handle_write, this,
+												 boost::asio::placeholders::error,
+												 boost::asio::placeholders::bytes_transferred));
+		}
+		void Socket_server::handle_write(const boost::system::error_code & /*error*/,
+										 size_t /*bytes_transferred*/)
+		{
+			std::lock_guard<std::mutex> lock(_write_mutex);
 		}
 
-		unsigned int Socket_server::connection_count() {
+		unsigned int Socket_server::connection_count()
+		{
 			return static_cast<unsigned int>(connections.size());
 		}
 
-		void Socket_server::broadcast(const std::vector<std::uint8_t>& data) {
-			for (int i = 0; i < connection_count(); i++) {
+		void Socket_server::broadcast(const std::vector<std::uint8_t> &data)
+		{
+			for (int i = 0; i < connection_count(); i++)
+			{
 				send(connections[i]->socket(), data);
 			}
-
 		}
 	}
 }
