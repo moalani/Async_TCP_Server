@@ -1,18 +1,18 @@
 # Async_TCP_Server
 
 
-#Install  Dependencies
+### Install  Dependencies
 1. Install g++ using `sudo apt-get install g++`
 2. Install boost asio using `sudo apt-get install libboost-all-dev`
 3. Install cmake using `sudo apt-get -y install cmake`
 
-#Build
+### Build
 Build from cmake file using `cmake .`
 
-#Run
+### Run
 Run the executable using `./Async_TCP_Server`
 
-#Test
+### Test
 If everything runs ok, go ahead and start testing the application by connecting to the server locally using telnet.
 1. Install telnet using `sudo apt-get install telnet`
 2. Open a new terminal window and connect `telnet localhost 1080`
