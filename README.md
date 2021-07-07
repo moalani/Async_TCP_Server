@@ -7,7 +7,7 @@
 3. Install cmake using `sudo apt-get -y install cmake` or if prefer to use GUI download from https://cmake.org/download/ 
 
 ### Build
-Build from cmake file using `cmake .` or use GUI
+Build from cmake file using GUI. If using command line interface, use `cmake .` then `make` 
 
 ### Run
 Run the executable using `./Async_TCP_Server` from a terminal window
