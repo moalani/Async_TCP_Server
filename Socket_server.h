@@ -20,15 +20,21 @@ class Connection
 public:
     Connection(boost::asio::io_context &io_context) : connection_socket(io_context)
     {
+
     }
-    
-    void start(std::shared_ptr<Test_delegate> delegate, int conn_id)
+
+    void start(std::shared_ptr<Test_delegate> delegate, int conn_id, unsigned int port)
     {
+        std::cout << "New connection\n";
+        boost::asio::ip::tcp::endpoint endpoint(
+        boost::asio::ip::address::from_string("127.0.0.1"), port);
+        connection_socket.async_connect(endpoint, boost::bind(&Connection::connect_handler, this, boost::asio::placeholders::error));
         _delegate = delegate;
         connection_id = conn_id;
         read();
     }
     
+
     boost::asio::ip::tcp::socket &socket()
     {
         
@@ -42,37 +48,47 @@ public:
     };
     static boost::shared_ptr<Connection> create(boost::asio::io_context &io_context)
     {
-        std::cout << "New connection\n";
         return boost::shared_ptr<Connection>(new Connection(io_context));
     }
     int connection_id;
+
     //Socket_server server;
 private:
-    
+    void connect_handler(const boost::system::error_code &error)
+    {
+        if (!error)
+        {
+            // Connect succeeded.
+        }
+    }
     void read()
     {
-        boost::asio::async_read(connection_socket, boost::asio::buffer(data_in),
-                                [this](boost::system::error_code ec, std::size_t length)
-                                {
-            if (!ec)
-            {
-                // TODO: complete implmenting read() function
+        // reading data at every new line entry.
+        boost::asio::async_read_until(connection_socket, buffer, '\n',
+                                      boost::bind(&Connection::handler, this,
+                                                  boost::asio::placeholders::error,
+                                                  boost::asio::placeholders::bytes_transferred));
+    }
+    void handler(const boost::system::error_code &e, std::size_t size)
+    {
+        if (!e)
+        {
+            std::lock_guard<std::mutex> lock(_read_mutex);
+            std::string line;
+            std::istream is(&buffer);
+            std::getline(is, line);
+            std::vector<uint8_t> data_in(line.begin(), line.end());
+            if (!line.empty()) {
                 std::string id = "Connection ID  " + std::to_string(connection_id);
                 _delegate->data_received(id, data_in);
-                //std::cout << "Message received: " << message << std::endl;
             }
-        });
+        }
+        read();
     }
-    
     boost::asio::ip::tcp::socket connection_socket;
-    /*enum
-    {
-        max_length = 1024
-    };*/
-    //char message[max_length];
-    std::vector<std::uint8_t> data_in;
     std::shared_ptr<Test_delegate> _delegate;
     boost::asio::streambuf buffer;
+    mutable std::mutex _read_mutex;
 };
 
 /// \brief Handles a simple TCP server
@@ -127,12 +143,14 @@ public:
     std::shared_ptr<Test_delegate> _delegate;
     
 private:
+
+    unsigned int _port;
     boost::asio::io_context _io_context;
     std::thread _thread;
     boost::asio::ip::tcp::acceptor _acceptor;
     std::vector<boost::shared_ptr<Connection>> connections;
     mutable std::mutex _write_mutex;
-    mutable std::mutex _read_mutex;
+    mutable std::mutex _connect_mutex;
     
 };
 

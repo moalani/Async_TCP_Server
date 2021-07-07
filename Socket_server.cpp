@@ -7,7 +7,7 @@ namespace util
 {
 // socket server constructor takes a Test_delegate and the port and sets server core attributes (io_contex, acceptor).
 Socket_server::Socket_server(unsigned int port, std::shared_ptr<Test_delegate> delegate) : _io_context(),
-_acceptor(_io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
+_acceptor(_io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)), _port(port)
 {
     
     std::cout << "Server is online..." << std::endl;
@@ -39,12 +39,11 @@ void Socket_server::async_accept()
                            {
         if (!ec)
         {
-            
-            std::lock_guard<std::mutex> lock(_read_mutex);
+            std::lock_guard<std::mutex> lock(_connect_mutex);
             connections.push_back(connection);
             std::cout << "Connection Successful !" << std::endl;
             std::cout << "Current number of connections = " << connection_count() << std::endl;
-            connection->start(_delegate, connection_count());
+            connection->start(_delegate, connection_count(), _port);
         }
         async_accept();
     });
@@ -52,7 +51,6 @@ void Socket_server::async_accept()
 // function to send data to a specific socket
 void Socket_server::send(boost::asio::ip::tcp::socket &sock, const std::vector<std::uint8_t> &data)
 {
-    
     boost::asio::async_write(sock, boost::asio::buffer(data),
                              boost::bind(&Socket_server::handle_write, this,
                                          boost::asio::placeholders::error,
