@@ -51,26 +51,26 @@ private:
     
     void read()
     {
-        boost::asio::async_read(connection_socket, boost::asio::buffer(message),
+        boost::asio::async_read(connection_socket, boost::asio::buffer(data_in),
                                 [this](boost::system::error_code ec, std::size_t length)
                                 {
             if (!ec)
             {
                 // TODO: complete implmenting read() function
-                std::string con_id = "Conn ID X: ";
-                std::vector<std::uint8_t> vin({1, 2, 3, 4});
-                _delegate->data_received(con_id, vin);
-                std::cout << "Message received: " << message << std::endl;
+                std::string id = "Connection ID  " + std::to_string(connection_id);
+                _delegate->data_received(id, data_in);
+                //std::cout << "Message received: " << message << std::endl;
             }
         });
     }
     
     boost::asio::ip::tcp::socket connection_socket;
-    enum
+    /*enum
     {
         max_length = 1024
-    };
-    char message[max_length];
+    };*/
+    //char message[max_length];
+    std::vector<std::uint8_t> data_in;
     std::shared_ptr<Test_delegate> _delegate;
     boost::asio::streambuf buffer;
 };
