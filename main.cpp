@@ -1,11 +1,6 @@
 #include <iostream>
 #include "Socket_server.h"
 
-using namespace nbs;
-using namespace util;
-
-
-
 int main() {
 	try {
 		Socket_server server(1080, std::make_shared<Test_delegate>());

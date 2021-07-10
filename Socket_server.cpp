@@ -1,10 +1,6 @@
 #include "Socket_server.h"
 
-namespace nbs
-{
 
-namespace util
-{
 // socket server constructor takes a Test_delegate and the port and sets server core attributes (io_contex, acceptor).
 Socket_server::Socket_server(unsigned int port, std::shared_ptr<Test_delegate> delegate) : _io_context(),
 _acceptor(_io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)), _port(port)
@@ -75,5 +71,4 @@ void Socket_server::broadcast(const std::vector<std::uint8_t> &data)
         send(connections[i]->socket(), data);
     }
 }
-} // util
-} // nbs
+

@@ -2,21 +2,7 @@
 #define Socket_server_delegate_h
 #include <iostream>
 #include <vector>
-// -Implement Socket_server class as described in comments using Boost asio library.
-// -Follow the same naming conventions of this code.
-// -Provide command line program that unit tests your implementation.
-// -After initial research, please provide a rough time estimate for completion.
-// I am aware of the difficulty in making accurate development time estimates.
-// -If you encounter a problem that appears to prevent making an implementation
-// as described, please contact me. Also contact me any time for assistance if
-// required.
 
-
-namespace nbs
-{
-
-namespace util
-{
 
 /// \brief Handler for Socket_server events
 ///
@@ -77,10 +63,6 @@ public:
         std::cout << (fatal ? "Fatal error: " : "Error: ") << message << '\n';
     }
 };
-
-} // namespace util
-
-} // namespace nbs
 
 
 #endif /* Socket_server_delegate_h */

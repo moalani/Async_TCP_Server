@@ -10,11 +10,7 @@
 #include "boost/thread/thread.hpp"
 #include "Socket_server_delegate.h"
 
-namespace nbs
-{
 
-namespace util
-{
 class Connection
 {
 public:
@@ -154,6 +150,4 @@ private:
     
 };
 
-} // namespace util
 
-} // namespace nbs
